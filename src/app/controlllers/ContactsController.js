@@ -9,7 +9,8 @@ class ContactsController {
                 res.status(200)
                 res.json(busca.body.results);
             } else {
-              
+                res.status(406)
+                res.json({resposta:"Não foi encontrado nem um contact"});
             }
         } catch (error) {
             res.status(500)
@@ -19,24 +20,32 @@ class ContactsController {
     }
 
     static async getOneContact(req, res) {
+        try{
         const filter = { propertyName: 'email',operator:'EQ', value: req.params.busca }
-        const filterGroup = { filters: [filter] }
-        const sort = JSON.stringify({ propertyName: 'email', direction: 'DESCENDING' })
-        const query = 'moseswalker@essensia.com'
+        const filterGroup = { filters: [filter] }     
         const properties = ['firstname', 'lastname','createdate','city','phone','email']
         const limit = 1
-        const after = 0
-
         const publicObjectSearchRequest = {
         filterGroups: [filterGroup],
-           sorts: [sort],
+           /*sorts: [sort],*/
            properties,
             limit,
-            after,
+           
         }
 
         const result = await hubspot.crm.contacts.searchApi.doSearch(publicObjectSearchRequest)
-        res.send(result)
+        if(result.body.total>0){
+            res.status(200)
+            res.send(result.body.results)
+        }else{
+            res.status(406)
+            res.json({resposta:"Não foi encontrado nada com o email passado"});
+        }
+       
+
+    }catch(err){
+        res.status(500).json({erro:"Ocorreu erro interno no servidor"})
+    }
     }
         
     static async createContacts(req, res) {
